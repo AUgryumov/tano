@@ -31,27 +31,24 @@ pub struct Trainer<'a,'b> {
     examples: &'b [(Vec<f64>, Vec<f64>)],
     rate: f64,
     momentum: f64,
-    log_interval: Option<u32>,
+    log: Option<fn(u32, f64)>,
     halt_condition: self::HaltCondition,
     learning_mode: LearningMode,
-    nn: &'a mut Network,
+    net: &'a mut Network,
 }
 
 impl<'a,'b> Trainer<'a,'b>  {
-    // TODO WRITE ABOUT THIS
-    /// Takes in vector of examples and returns a `Trainer` struct that is used
-    /// to specify options that dictate how the training should proceed.
-    /// No actual training will occur until the `go()` method on the
-    /// `Trainer` struct is called.
+    /// Takes `target`: target network that you need to learn and examples and `examples`: slice with two fields:
+    /// input and expected output. Returns `Trainer` with default fields
     pub fn new(target: &'a mut super::Network, examples: &'b [(Vec<f64>, Vec<f64>)]) -> Trainer<'a, 'b> {
         Trainer {
             examples: examples,
             rate: DEFAULT_LEARNING_RATE,
             momentum: DEFAULT_MOMENTUM,
-            log_interval: None,
+            log: None,
             halt_condition: HaltCondition::MSE(DEFAULT_MSE),
             learning_mode: LearningMode::Incremental,
-            nn: target,
+            net: target,
         }
     }
 
@@ -59,7 +56,7 @@ impl<'a,'b> Trainer<'a,'b>  {
     /// This is the step size that is used in the backpropagation algorithm.
     pub fn rate(&mut self, rate: f64) -> &mut Trainer<'a,'b> {
         if rate <= 0f64 {
-            panic!("the learning rate must be a positive number");
+            panic!("The learning rate must be a positive number");
         }
 
         self.rate = rate;
@@ -69,7 +66,7 @@ impl<'a,'b> Trainer<'a,'b>  {
     /// Specifies the momentum to be used when training (default is `0.0`)
     pub fn momentum(&mut self, momentum: f64) -> &mut Trainer<'a,'b> {
         if momentum <= 0f64 {
-            panic!("momentum must be positive");
+            panic!("Momentum must be positive");
         }
 
         self.momentum = momentum;
@@ -78,15 +75,8 @@ impl<'a,'b> Trainer<'a,'b>  {
 
     /// Specifies how often (measured in batches) to log the current error rate (mean squared error) during training.
     /// `Some(x)` means log after every `x` batches and `None` means never log
-    pub fn log_interval(&mut self, log_interval: Option<u32>) -> &mut Trainer<'a,'b> {
-        match log_interval {
-            Some(interval) if interval < 1 => {
-                panic!("log interval must be Some positive number or None")
-            }
-            _ => ()
-        }
-
-        self.log_interval = log_interval;
+    pub fn log(&mut self, log: Option<fn(u32, f64)>) -> &mut Trainer<'a,'b> {
+        self.log = log;
         self
     }
 
@@ -98,7 +88,7 @@ impl<'a,'b> Trainer<'a,'b>  {
     pub fn halt_condition(&mut self, halt_condition: HaltCondition) -> &mut Trainer<'a,'b> {
         match halt_condition {
             HaltCondition::Epochs(epochs) if epochs < 1 => {
-                panic!("must train for at least one epoch")
+                panic!("Must train for at least one epoch")
             }
             HaltCondition::MSE(mse) if mse <= 0f64 => {
                 panic!("MSE must be greater than 0")
@@ -122,22 +112,22 @@ impl<'a,'b> Trainer<'a,'b>  {
     /// get trained!
     pub fn go(&mut self) -> f64 {
         // check that input and output sizes are correct
-        let input_layer_size = self.nn.num_inputs;
-        let output_layer_size = self.nn.layers[self.nn.layers.len() - 1].len();
+        let input_layer_size = self.net.num_inputs;
+        let output_layer_size = self.net.layers[self.net.layers.len() - 1].len();
         for &(ref inputs, ref outputs) in self.examples.iter() {
             if inputs.len() as u32 != input_layer_size {
-                panic!("input has a different length than the network's input layer");
+                panic!("Input has a different length than the network's input layer");
             }
             if outputs.len() != output_layer_size {
-                panic!("output has a different length than the network's output layer");
+                panic!("Output has a different length than the network's output layer");
             }
         }
 
-        let (examples, rate, momentum, log_interval, halt_condition) = (self.examples, self.rate, self.momentum, self.log_interval, self.halt_condition);
+        let (examples, rate, momentum, log_interval, halt_condition) = (self.examples, self.rate, self.momentum, self.log, self.halt_condition);
         self.train_incremental(examples, rate, momentum, log_interval, halt_condition)
     }
 
-    fn train_incremental(&mut self, examples: &[(Vec<f64>, Vec<f64>)], rate: f64, momentum: f64, log_interval: Option<u32>,
+    fn train_incremental(&mut self, examples: &[(Vec<f64>, Vec<f64>)], rate: f64, momentum: f64, log_interval: Option<fn(u32, f64)>,
                          halt_condition: HaltCondition) -> f64 {
 
         let mut prev_deltas = self.make_weights_tracker(0.0f64);
@@ -148,15 +138,15 @@ impl<'a,'b> Trainer<'a,'b>  {
         loop {
 
             if epochs > 0 {
-                // log error rate if necessary
+                // Log error rate if necessary
                 match log_interval {
-                    Some(interval) if epochs % interval == 0 => {
-                        println!("error rate: {}", training_error_rate);
+                    Some(interval) => {
+                        interval(epochs, training_error_rate);
                     },
                     _ => (),
                 }
 
-                // check if we've met the halt condition yet
+                // Check if we've met the halt condition yet
                 match halt_condition {
                     HaltCondition::Epochs(epochs_halt) => {
                         if epochs == epochs_halt { break }
@@ -174,10 +164,10 @@ impl<'a,'b> Trainer<'a,'b>  {
             training_error_rate = 0f64;
 
             for &(ref inputs, ref targets) in examples.iter() {
-                let results = self.nn.do_run(&inputs);
+                let results = self.net.do_run(&inputs);
                 let weight_updates = self.calculate_weight_updates(&results, &targets);
                 training_error_rate += super::utils::calculate_error(&results, &targets);
-                self.nn.update_weights(&weight_updates, &mut prev_deltas, rate, momentum)
+                self.net.update_weights(&weight_updates, &mut prev_deltas, rate, momentum)
             }
 
             epochs += 1;
@@ -186,11 +176,11 @@ impl<'a,'b> Trainer<'a,'b>  {
         training_error_rate
     }
 
-    // calculates all weight updates by backpropagation
+    // Calculates all weight updates by backpropagation
     fn calculate_weight_updates(&self, results: &Vec<Vec<f64>>, targets: &[f64]) -> Vec<Vec<Vec<f64>>> {
         let mut network_errors:Vec<Vec<f64>> = Vec::new();
         let mut network_weight_updates = Vec::new();
-        let layers = &self.nn.layers;
+        let layers = &self.net.layers;
         let network_results = &results[1..]; // skip the input layer
         let mut next_layer_nodes: Option<&Vec<Vec<f64>>> = None;
 
@@ -202,10 +192,9 @@ impl<'a,'b> Trainer<'a,'b>  {
 
             for (node_index, (node, &result)) in super::utils::iter_zip_enum(layer_nodes, layer_results) {
                 let mut node_weight_updates = Vec::new();
-                //let mut node_error;
                 let node_error;
 
-                // calculate error for this node
+                // Calculate error for this node
                 if layer_index == layers.len() - 1 {
                     node_error = result * (1f64 - result) * (targets[node_index] - result);
                 } else {
@@ -217,7 +206,7 @@ impl<'a,'b> Trainer<'a,'b>  {
                     node_error = result * (1f64 - result) * sum;
                 }
 
-                // calculate weight updates for this node
+                // Calculate weight updates for this node
                 for weight_index in 0..node.len() {
                     //let mut prev_layer_result;
                     let prev_layer_result;
@@ -239,7 +228,7 @@ impl<'a,'b> Trainer<'a,'b>  {
             next_layer_nodes = Some(&layer_nodes);
         }
 
-        // updates were built by backpropagation so reverse them
+        // Updates were built by backpropagation so reverse them
         network_weight_updates.reverse();
 
         network_weight_updates
@@ -247,7 +236,7 @@ impl<'a,'b> Trainer<'a,'b>  {
 
     fn make_weights_tracker<T: Clone>(&self, place_holder: T) -> Vec<Vec<Vec<T>>> {
         let mut network_level = Vec::new();
-        for layer in self.nn.layers.iter() {
+        for layer in self.net.layers.iter() {
             let mut layer_level = Vec::new();
             for node in layer.iter() {
                 let mut node_level = Vec::new();

@@ -1,5 +1,4 @@
 extern crate tano;
-extern crate time;
 
 use tano::*;
 use tano::trainer::*;

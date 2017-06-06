@@ -4,6 +4,7 @@ use std::slice;
 pub fn sigmoid(y: f64) -> f64 {
     1f64 / (1f64 + (-y).exp())
 }
+pub fn linear(y: f64) -> f64 { if y <= 0.5 { 0. } else { 1. } }
 
 // calculates MSE of output layer
 pub fn calculate_error(results: &Vec<Vec<f64>>, targets: &[f64]) -> f64 {
