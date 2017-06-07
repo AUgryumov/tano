@@ -2,10 +2,8 @@
 // TODO WRITE NETWORK TRAIT
 // TODO WRITE NEURON TRAIT
 // TODO DOCUMENT NETWORK struct
-// TODO DOCUMENT LAYER trait
 // TODO WRITE EXAMPLES
-
-// FIXME 1 SAMPLE (1 NEURON, 1 LAYER, NO NETWORK)
+// TODO WRITE NETWORK BUILDER
 
 pub mod layers;
 mod utils;
@@ -15,15 +13,19 @@ use layers::Layer;
 use layers::UsualLayer;
 
 pub struct Network {
+    // Layers vector
     layers: Vec<Box<Layer>>,
+    // Size of the first layer (input size)
     input_size: usize,
 }
 
 impl Network {
+    // Returns a new Network
     pub fn new(layers_sizes: &[usize]) -> Self {
         if layers_sizes.len() < 2 {
             panic!("Must be at least 2 layers")
         }
+
         let mut layers: Vec<Box<Layer>> = Vec::with_capacity(layers_sizes.len());
         let mut it = layers_sizes.iter();
         let mut prev_layer_size = *it.next().unwrap();
@@ -36,6 +38,7 @@ impl Network {
         Network { layers, input_size }
     }
 
+    // Runs network
     pub fn run(&self, input: Vec<f64>) -> Vec<f64> {
         if self.input_size != input.len() {
             panic!("Bad input length");
@@ -43,7 +46,7 @@ impl Network {
 
         let mut prev_out = input;
         for layer in &self.layers {
-            prev_out = (layer).run(prev_out);
+            prev_out = (layer).run(&prev_out);
         }
 
         prev_out

@@ -3,26 +3,37 @@ extern crate rand;
 use self::rand::Rng;
 use super::utils::sigmoid;
 
+// Any struct that implements Layer must realise the functions bellow.
+// You can see a sample of implementation of this trait in UsualLayer implementations
 pub trait Layer {
-    fn new(neuron_count: usize, connections_count: usize) -> Self where Self: Sized; //Returns self
-    fn run(&self, input: Vec<f64>) -> Vec<f64>;
-    fn learn(&mut self, errors: Vec<f64>, input: Vec<f64>, learning_rate: f64) -> Vec<f64>; //Returns errors
+    // Creates a new layer. Returns Self (Layer implementation)
+    fn new(neuron_count: usize, connections_count: usize) -> Self where Self: Sized;
+    // Runs layer. Input: vector of output of a last layer. Returns vector of neuron output
+    fn run(&self, input: &Vec<f64>) -> Vec<f64>;
+    // Trains layer. `errors`: vector of error for each neuron. `input`: vector of output of a last layer.
+    // learning_rate: learning rate for network. Returns vector of new errors
+    fn train(&mut self, errors: Vec<f64>, input: Vec<f64>, learning_rate: f64) -> Vec<f64>;
 }
 
+// Base neural network layer
 pub struct UsualLayer {
+    // Neuron list. The neuron consist only of weights
     neurons: Vec<Vec<f64>>,
+    // Count of connections of each neuron
     connections_count: usize
 }
 
 impl Layer for UsualLayer {
     fn new(neuron_count: usize, connections_count: usize) -> Self {
-        let mut rng = rand::thread_rng();
-        let mut neurons: Vec<Vec<f64>> = Vec::with_capacity(neuron_count);
+        let mut rng = rand::thread_rng(); // Range for weight randomize
+        let mut neurons: Vec<Vec<f64>> = Vec::with_capacity(neuron_count); // Neuron vec
 
+        // Neurons creating
         for _ in 0..neuron_count {
+            // Weights creating
             let mut weights = Vec::new();
             for _ in 0..connections_count {
-                weights.push(rng.gen_range(-0.5_f64, 0.5_f64))
+                weights.push(rng.gen_range(-0.5_f64, 0.5_f64)) // Generates weight from -0.5 to 0.5
             }
             neurons.push(weights);
         }
@@ -33,37 +44,47 @@ impl Layer for UsualLayer {
         }
     }
 
-    //TODO CHECK BUGS
-    fn run(&self, input: Vec<f64>) -> Vec<f64> {
+    fn run(&self, input: &Vec<f64>) -> Vec<f64> {
+        // Output vector
         let mut out: Vec<f64> = Vec::new();
 
         for weights in &self.neurons {
-            let mut sum = 0.;
+            let mut transferred = 0.;
+            
+            // Calculating transfer output
             for (input, weight) in input.iter().zip(weights.iter()) {
-                sum += input * weight;
+                transferred += input * weight;
             }
-            out.push(sigmoid(sum));
+
+            out.push(sigmoid(transferred));
         }
 
         out
     }
 
-    //TODO CHECK BUGS
-    fn learn(&mut self, errors: Vec<f64>, input: Vec<f64>, learning_rate: f64) -> Vec<f64> {
+    // TODO CHECK FORMULAS
+    fn train(&mut self, errors: Vec<f64>, input: Vec<f64>, learning_rate: f64) -> Vec<f64> {
+        // Error value initializing
         let mut next_layer_errors: Vec<f64> = Vec::with_capacity(self.connections_count);
         for _ in 0..self.connections_count { next_layer_errors.push(0.) }
+
         for (weights, error) in self.neurons.iter_mut().zip(errors.iter()) {
-            let sigmoid = sigmoid(*error); //Optimization
+            // Calculating sigmoid of error
+            let sigmoid = sigmoid(*error);
+
+            // Calculating weights delta
             let weights_delta = error * sigmoid * (1. - sigmoid);
-            println!("SIGMOID: {}; INPUT: {:?}; WEIGHTS_DELTA: {}", sigmoid, input, weights_delta);
 
             for ((weight, input), error) in weights.iter_mut().zip(input.iter()).zip(next_layer_errors.iter_mut()) {
-                *error = *weight * weights_delta;
-                println!("FUUUCK: {}; WEIGHT: {}", input * weights_delta * learning_rate, weight);
+                // Calculating error for next layer
+                // TODO CHECK FORMULE
+                *error += *weight * weights_delta;
+
+                // Calculating weight update
                 *weight += input * weights_delta * learning_rate;
-                println!("NEW WEIGHT: {}", weight);
             }
         }
+
         next_layer_errors
     }
 }
