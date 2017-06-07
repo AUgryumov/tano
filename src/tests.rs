@@ -1,30 +1,34 @@
 #[test]
-fn usual_layer_creating() {
-    use super::layers::UsualLayer;
-    use super::layers::Layer;
+fn network() {
+    use super::layer::Layer;
+    use super::layer::UsualLayer;
+    use super::network::NetworkBuilder;
 
-    // Create a layers
-    UsualLayer::new(1, 1);
-    UsualLayer::new(1000, 1000);
+    let net1 = NetworkBuilder::new(3, 1).layer(Box::new(UsualLayer::new(2))).finalize();
+    let net2 = NetworkBuilder::new(3, 1).layer(Box::new(UsualLayer::new(2))).finalize();
+
+    let input = vec![0., 0., 0.];
+    assert!(net1.run(&input) != net2.run(&input));
 }
 
 #[test]
-fn usual_layer_learning() {
-    use super::layers::UsualLayer;
-    use super::layers::Layer;
+fn usual_layer() {
+    use super::layer::Layer;
+    use super::layer::UsualLayer;
 
-    // Create a neuron
-    let mut layer = UsualLayer::new(1, 1);
+    let mut layer1 = UsualLayer::new(10);
+    let mut layer2 = UsualLayer::new(100);
 
-    // Train a neuron
-    for _ in 0..1000 {
-        let actual = layer.run(&vec![1.])[0];
-        let error = 1. - actual;
-        assert!(!(actual.is_nan() || actual.is_infinite()));
+    assert!(layer1.get_neurons() != layer2.get_neurons());
+}
 
-        layer.train(vec![error], vec![1.], 0.01);
-    }
+#[test]
+fn back_propagation_optimizer() {
+    use super::optimizer::Optimizer;
+    use super::optimizer::BackPropagationOptimizer;
+    use super::network::NetworkBuilder;
 
-    // Check result
-    assert_eq!(layer.run(&vec![1.])[0].round(), 1_f64);
+    let network = &mut NetworkBuilder::new(1, 1).finalize();
+    let mut optimizer = BackPropagationOptimizer::new(network, 0.1);
+    optimizer.run();
 }
