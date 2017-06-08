@@ -4,6 +4,5 @@
 pub mod layer;
 pub mod network;
 pub mod optimizer;
-
-mod math;
+pub mod math;
 mod tests;

@@ -15,20 +15,14 @@ fn network() {
 fn usual_layer() {
     use super::layer::Layer;
     use super::layer::UsualLayer;
+    use super::network::NetworkBuilder;
 
     let mut layer1 = UsualLayer::new(10);
     let mut layer2 = UsualLayer::new(100);
 
-    assert!(layer1.get_neurons() != layer2.get_neurons());
-}
+    assert!(layer1.get_weights() != layer2.get_weights());
 
-#[test]
-fn back_propagation_optimizer() {
-    use super::optimizer::Optimizer;
-    use super::optimizer::BackPropagationOptimizer;
-    use super::network::NetworkBuilder;
-
-    let network = &mut NetworkBuilder::new(1, 1).finalize();
-    let mut optimizer = BackPropagationOptimizer::new(network, 0.1);
-    optimizer.run();
+    let net = NetworkBuilder::new(2, 1).layer(Box::new(layer1)).finalize();
+    println!("{:?}", net.run(&vec![1_f64, 1_f64]));
+    println!("{:?}", net);
 }
