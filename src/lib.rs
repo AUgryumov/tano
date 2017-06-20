@@ -1,8 +1,9 @@
 /// This is a library for machine intelligence.
 /// Now it in active development, please wait.
 
-pub mod layer;
+pub mod layers;
 pub mod network;
-pub mod optimizer;
-pub mod math;
+
+mod neurons;
+mod utils;
 mod tests;
