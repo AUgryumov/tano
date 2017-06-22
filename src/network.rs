@@ -1,5 +1,6 @@
 use super::layers::{Layer, UsualLayer};
 use super::utils::{Activation, sigmoid};
+use super::optimizers::{OptimizationTypes, Optimizer};
 
 pub struct Network {
     layers: Vec<Box<Layer>>,
@@ -18,6 +19,16 @@ impl Network {
             output = layer.run(output, self.activation)
         }
         output
+    }
+}
+
+impl Optimizer for Network {
+    fn optimize(&mut self, optimizer: OptimizationTypes) {
+        match optimizer {
+            OptimizationTypes::FeedForward(_, _, _) => {
+                panic!("feed forward optimization is in development");
+            }
+        }
     }
 }
 
@@ -41,7 +52,7 @@ impl NetworkBuilder {
     pub fn layer(mut self, layer: Box<Layer>) -> Self {
         let mut new_layer = layer;
         new_layer.set_relations_count(match self.layers.last() {
-            Some(T) => T.get_neurons().len(),
+            Some(l) => l.get_neurons().len(),
             None => self.input_size
         });
 

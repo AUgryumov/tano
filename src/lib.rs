@@ -3,6 +3,7 @@
 
 pub mod layers;
 pub mod network;
+pub mod optimizers;
 
 mod neurons;
 mod utils;
