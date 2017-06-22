@@ -17,10 +17,10 @@ pub trait Optimizer {
     fn optimize(&mut self, optimizer: OptimizationTypes);
 }
 
-pub trait LayerOptimizer {
-    fn optimize(&mut self, optimizer: OptimizationTypes);
+pub(crate) trait LayerOptimizer {
+    fn optimize(&mut self, optimizer: LayerOptimizationTypes);
 }
 
-pub trait NeuronOptimizer {
-    fn optimize(&mut self, optimizer: OptimizationTypes);
+pub(crate) trait NeuronOptimizer {
+    fn optimize(&mut self, optimizer: NeuronOptimizationTypes);
 }

@@ -7,4 +7,3 @@ pub mod optimizers;
 
 mod neurons;
 mod utils;
-mod tests;
