@@ -1,26 +1,33 @@
 // TODO WRITE OPTIMIZATION METHODS
 #![allow(dead_code)]
 
+/// Enum in which you can choose optimization method
 pub enum OptimizationTypes {
-    FeedForward(Vec<f64>, Vec<f64>, f64) // input, expected and learning rate
+    /// Feed forward optimization method.
+    FeedForward{input: Vec<f64>, expected: Vec<f64>, learning_rate: f64}
 }
 
-pub(crate) enum LayerOptimizationTypes {
-    FeedForward(Vec<f64>, Vec<f64>, f64) // input, expected and learning rate
+/// Enum for layer optimization
+pub(crate) enum LayerOptimizationTypes<'a> {
+    FeedForward{input: Vec<f64>, expected: Vec<f64>, learning_rate: f64}
 }
 
+/// Enum for neuron optimization
 pub(crate) enum NeuronOptimizationTypes {
-    FeedForward(Vec<f64>, Vec<f64>, f64) // input, expected and learning rate
+    FeedForward{input: Vec<f64>, expected: Vec<f64>, learning_rate: f64}
 }
 
+/// Trait which allows you to optimize network
 pub trait Optimizer {
     fn optimize(&mut self, optimizer: OptimizationTypes);
 }
 
+/// Trait which allows you to optimize layer
 pub(crate) trait LayerOptimizer {
     fn optimize(&mut self, optimizer: LayerOptimizationTypes);
 }
 
+/// Trait which allows you to optimize neuron
 pub(crate) trait NeuronOptimizer {
     fn optimize(&mut self, optimizer: NeuronOptimizationTypes);
 }

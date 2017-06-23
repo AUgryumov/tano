@@ -25,7 +25,7 @@ impl Network {
 impl Optimizer for Network {
     fn optimize(&mut self, optimizer: OptimizationTypes) {
         match optimizer {
-            OptimizationTypes::FeedForward(_, _, _) => {
+            OptimizationTypes::FeedForward{input: _, expected: _, learning_rate: _} => {
                 panic!("feed forward optimization is in development");
             }
         }
