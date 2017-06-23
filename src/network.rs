@@ -1,5 +1,5 @@
 use super::layers::{Layer, UsualLayer};
-use super::utils::{Activation, sigmoid};
+use super::utils::activation::{Activation, sigmoid};
 use super::optimizers::{OptimizationTypes, Optimizer};
 
 pub struct Network {
@@ -50,13 +50,13 @@ impl NetworkBuilder {
     }
 
     pub fn layer(mut self, layer: Box<Layer>) -> Self {
-        let mut new_layer = layer;
-        new_layer.set_relations_count(match self.layers.last() {
+        let mut layer = layer;
+        layer.set_relations_count(match self.layers.last() {
             Some(l) => l.get_neurons().len(),
             None => self.input_size
         });
 
-        self.layers.push(new_layer);
+        self.layers.push(layer);
         self
     }
 
@@ -66,8 +66,6 @@ impl NetworkBuilder {
     }
 
     pub fn finalize(mut self) -> Network {
-        let output = self.output_size;
-        self = self.layer(Box::new(UsualLayer::new(output)));
         Network {
             layers: self.layers,
             activation: self.activation,

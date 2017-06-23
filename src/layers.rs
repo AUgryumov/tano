@@ -1,14 +1,28 @@
 use super::neurons::{Neuron, UsualNeuron};
-use super::utils::Activation;
+use super::optimizers::layer_optimizers::{LayerOptimizer, LayerOptimizationTypes};
+use super::utils::activation::Activation;
 
-pub trait Layer {
+/// A lot of this traits forms a network
+pub trait Layer: LayerOptimizer {
+    /// Creates new Layer.
     fn new(neurons_count: usize) -> Self where Self: Sized;
+
+    /// Sets relation count (count of links with other layer)
+    /// More often this is count of neurons in previous layer
     fn set_relations_count(&mut self, relations_count: usize);
+
+    /// Runs a layer.
+    /// Mutable pointer to the `self` is necessary for recurrent networks
     fn run(&mut self, input: Vec<f64>, activation: Activation) -> Vec<f64>;
+
+    /// Returns a pointer to neurons of the layer
     fn get_neurons(&self) -> &Vec<Box<Neuron>>;
+
+    /// Returns a mutable pointer to neurons of the layer
     fn get_mut_neurons(&mut self) -> &mut Vec<Box<Neuron>>;
 }
 
+/// Simple layer structure
 pub struct UsualLayer {
     neurons: Vec<Box<Neuron>>
 }
@@ -46,5 +60,12 @@ impl Layer for UsualLayer {
 
     fn get_mut_neurons(&mut self) -> &mut Vec<Box<Neuron>> {
         &mut self.neurons
+    }
+}
+
+impl LayerOptimizer for UsualLayer {
+    // TODO IMPLEMENT
+    fn optimize(&mut self, optimizer: LayerOptimizationTypes) {
+        unimplemented!()
     }
 }

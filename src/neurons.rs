@@ -1,16 +1,26 @@
-/// Neuron trait.
-pub trait Neuron {
+extern crate rand;
+
+use self::rand::Rng;
+
+use super::optimizers::neuron_optimizers::{NeuronOptimizer, NeuronOptimizationTypes};
+use super::utils::activation::Activation;
+
+/// A lot of this traits forms a layer
+pub trait Neuron: NeuronOptimizer {
     /// Creates new neuron
     fn new(relation_count: usize) -> Self where Self: Sized;
+
     /// Performs input
-    fn run(&mut self, input: &Vec<f64>, activation: super::utils::Activation) -> f64;
-    /// Returns pointer to weights
+    fn run(&mut self, input: &Vec<f64>, activation: Activation) -> f64;
+
+    /// Returns a pointer to weights of the neuron
     fn get_weights(&self) -> &Vec<f64>;
-    /// Returns mutable pointer to weights
+
+    /// Returns a mutable pointer to weights of the neuron
     fn get_mut_weights(&mut self) -> &mut Vec<f64>;
 }
 
-/// UsualNeuron structure
+/// Simple neuron structure
 pub(crate) struct UsualNeuron {
     weights: Vec<f64>
 }
@@ -20,14 +30,14 @@ impl Neuron for UsualNeuron {
         // Weights generation
         let mut weights: Vec<f64> = Vec::with_capacity(relation_count);
         for _ in 0..relation_count {
-            weights.push(super::utils::gen_random_weight());
+            weights.push(rand::thread_rng().gen());
         }
         UsualNeuron {
             weights
         }
     }
 
-    fn run(&mut self, input: &Vec<f64>, activation: super::utils::Activation) -> f64 {
+    fn run(&mut self, input: &Vec<f64>, activation: Activation) -> f64 {
         // TODO DELETE
         if input.len() != self.weights.len() {
             panic!("dimension of input and weights vectors do not match");
@@ -46,6 +56,13 @@ impl Neuron for UsualNeuron {
     }
 }
 
+impl NeuronOptimizer for UsualNeuron {
+    fn optimize(&mut self, optimizer: NeuronOptimizationTypes) {
+        unimplemented!()
+    }
+}
+
+/// Recurrent neuron structure
 pub(crate) struct RecurrentNeuron {
     neuron: UsualNeuron,
     recurrent_connection: f64
@@ -60,7 +77,7 @@ impl Neuron for RecurrentNeuron {
         }
     }
 
-    fn run(&mut self, input: &Vec<f64>, activation: super::utils::Activation) -> f64 {
+    fn run(&mut self, input: &Vec<f64>, activation: Activation) -> f64 {
         // Adds recurrent connection value
         let mut input_with_recurrent_connection = input.clone();
         input_with_recurrent_connection.push(self.recurrent_connection);
@@ -76,5 +93,11 @@ impl Neuron for RecurrentNeuron {
 
     fn get_mut_weights(&mut self) -> &mut Vec<f64> {
         self.neuron.get_mut_weights()
+    }
+}
+
+impl NeuronOptimizer for RecurrentNeuron {
+    fn optimize(&mut self, optimizer: NeuronOptimizationTypes) {
+        unimplemented!()
     }
 }
