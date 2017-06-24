@@ -1,5 +1,5 @@
 use super::neurons::{Neuron, UsualNeuron};
-use super::optimizers::layer_optimizers::{LayerOptimizer, LayerOptimizationTypes};
+use super::optimizers::layer_optimizers::{LayerOptimizer, LayerOptimizationModes};
 use super::utils::activation::Activation;
 
 /// A lot of this traits forms a network
@@ -65,7 +65,7 @@ impl Layer for UsualLayer {
 
 impl LayerOptimizer for UsualLayer {
     // TODO IMPLEMENT
-    fn optimize(&mut self, optimizer: LayerOptimizationTypes) {
+    fn optimize(&mut self, optimizer: LayerOptimizationModes) {
         unimplemented!()
     }
 }

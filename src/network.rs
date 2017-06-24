@@ -1,7 +1,8 @@
 use super::layers::{Layer, UsualLayer};
 use super::utils::activation::{Activation, sigmoid};
-use super::optimizers::{OptimizationTypes, Optimizer};
+use super::optimizers::{OptimizationModes, Optimizer};
 
+/// A structure that allows you to run and optimize the network
 pub struct Network {
     layers: Vec<Box<Layer>>,
     activation: Activation,
@@ -9,6 +10,7 @@ pub struct Network {
 }
 
 impl Network {
+    /// Runs the network
     pub fn go(&mut self, input: Vec<f64>) -> Vec<f64> {
         if input.len() != self.input_size {
             panic!("bad input length");
@@ -23,32 +25,33 @@ impl Network {
 }
 
 impl Optimizer for Network {
-    fn optimize(&mut self, optimizer: OptimizationTypes) {
+    fn optimize(&mut self, optimizer: OptimizationModes) {
         match optimizer {
-            OptimizationTypes::FeedForward{input: _, expected: _, learning_rate: _} => {
+            OptimizationModes::FeedForward{input: _, expected: _, learning_rate: _} => {
                 panic!("feed forward optimization is in development");
             }
         }
     }
 }
 
+/// A structure that was made to simplify `Network` creation process
 pub struct NetworkBuilder {
     layers: Vec<Box<Layer>>,
     activation: Activation,
     input_size: usize,
-    output_size: usize,
 }
 
 impl NetworkBuilder {
-    pub fn new(input_size: usize, output_size: usize) -> NetworkBuilder {
+    /// Creates a new `NetworkBuilder`
+    pub fn new(input_size: usize) -> NetworkBuilder {
         NetworkBuilder {
             layers: Vec::new(),
             activation: sigmoid,
             input_size,
-            output_size
         }
     }
 
+    /// Adds a new layer into network
     pub fn layer(mut self, layer: Box<Layer>) -> Self {
         let mut layer = layer;
         layer.set_relations_count(match self.layers.last() {
@@ -60,12 +63,14 @@ impl NetworkBuilder {
         self
     }
 
+    /// Sets network activation function
     pub fn activation(mut self, activation: Activation) -> Self {
         self.activation = activation;
         self
     }
 
-    pub fn finalize(mut self) -> Network {
+    /// Finalizes network creation process
+    pub fn finalize(self) -> Network {
         Network {
             layers: self.layers,
             activation: self.activation,

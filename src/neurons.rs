@@ -2,7 +2,7 @@ extern crate rand;
 
 use self::rand::Rng;
 
-use super::optimizers::neuron_optimizers::{NeuronOptimizer, NeuronOptimizationTypes};
+use super::optimizers::neuron_optimizers::{NeuronOptimizer, NeuronOptimizationModes};
 use super::utils::activation::Activation;
 
 /// A lot of this traits forms a layer
@@ -30,7 +30,7 @@ impl Neuron for UsualNeuron {
         // Weights generation
         let mut weights: Vec<f64> = Vec::with_capacity(relation_count);
         for _ in 0..relation_count {
-            weights.push(rand::thread_rng().gen());
+            weights.push(rand::thread_rng().gen_range(-0.5, 0.5));
         }
         UsualNeuron {
             weights
@@ -57,7 +57,7 @@ impl Neuron for UsualNeuron {
 }
 
 impl NeuronOptimizer for UsualNeuron {
-    fn optimize(&mut self, optimizer: NeuronOptimizationTypes) {
+    fn optimize(&mut self, optimizer: NeuronOptimizationModes) {
         unimplemented!()
     }
 }
@@ -97,7 +97,7 @@ impl Neuron for RecurrentNeuron {
 }
 
 impl NeuronOptimizer for RecurrentNeuron {
-    fn optimize(&mut self, optimizer: NeuronOptimizationTypes) {
+    fn optimize(&mut self, optimizer: NeuronOptimizationModes) {
         unimplemented!()
     }
 }

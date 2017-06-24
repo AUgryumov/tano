@@ -1,9 +1,9 @@
 /// Enum for neuron optimization
-pub enum NeuronOptimizationTypes {
+pub enum NeuronOptimizationModes {
     FeedForward{input: Vec<f64>, expected: Vec<f64>, learning_rate: f64}
 }
 
 /// Trait which allows you to optimize neuron
 pub trait NeuronOptimizer {
-    fn optimize(&mut self, optimizer: NeuronOptimizationTypes);
+    fn optimize(&mut self, optimizer: NeuronOptimizationModes);
 }
