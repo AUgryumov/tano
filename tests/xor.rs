@@ -18,13 +18,17 @@ fn xor() {
         .layer(Box::new(UsualLayer::new(1)))
         .finalize();
 
-    for (input, expected) in train_data {
-        net.optimize(OptimizationModes::FeedForward {
-            input: input,
-            expected: expected,
-            learning_rate: 0.1
-        });
+    for _ in 0..10000 {
+        for (input, expected) in train_data.clone() {
+            net.optimize(OptimizationModes::FeedForward {
+                input: input,
+                expected: expected,
+                learning_rate: 0.1
+            });
+        }
     }
 
-    println!("{:?}", net.go(vec![1., 1.]));
+    for (input, expected) in train_data {
+        assert_eq!(net.go(input)[0].round(), expected[0]);
+    }
 }
